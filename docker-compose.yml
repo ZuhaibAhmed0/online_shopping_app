@@ -1,10 +1,10 @@
 version: "3.8"
 
 services:
-  online_shop:
+  online_app:
     build:
       context: .
-    container_name: online_shop
+    container_name: online_app
     ports:
       - "5173:80"  # Expose container port 80 (Nginx) to host port 5173
     restart: always
@@ -14,7 +14,7 @@ services:
       timeout: 10s
       retries: 5
     networks:
-      - online_shop
+      - online_app
 
 networks:
   online_shop:
