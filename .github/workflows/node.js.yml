@@ -1,29 +1,46 @@
-name: Node.js Package
+name: Frontend CI/CD with Docker
 
 on:
   push:
     branches: [master]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Build Docker image
-        run: sudo docker build -t online-app .
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Stop and remove existing container (if exists)
+      - name: Build project
+        run: npm run build
+
+      - name: Stop and remove existing container (if any)
         run: |
-          sudo docker stop container || true
-          sudo docker rm container || true
+          sudo docker stop online_shop || true
+          sudo docker rm online_shop || true
 
-      - name: Run Docker container
-        run: sudo docker run -d -p 80:80 --name online-app online-app
+      - name: Build Docker image
+        run: sudo docker-compose build
+
+      - name: Run container with Docker Compose
+        run: sudo docker-compose up -d
+
+      - name: Verify container is healthy
+        run: |
+          for i in {1..10}; do
+            STATUS=$(sudo docker inspect --format='{{.State.Health.Status}}' online_shop)
+            echo "Health status: $STATUS"
+            [ "$STATUS" = "healthy" ] && exit 0
+            sleep 5
+          done
+          echo "Container is not healthy"
+          exit 1
