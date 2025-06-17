@@ -1,0 +1,29 @@
+name: Node.js Package
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Docker image
+        run: sudo docker build -t online-app .
+
+      - name: Stop and remove existing container (if exists)
+        run: |
+          sudo docker stop container || true
+          sudo docker rm container || true
+
+      - name: Run Docker container
+        run: sudo docker run -d -p 80:80 --name online-app online-app
